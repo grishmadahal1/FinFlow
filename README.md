@@ -1,6 +1,6 @@
 # FinFlow
 
-> **This project was AI-generated using [Claude Code](https://claude.com/claude-code).** I'm using it as a hands-on way to learn how to work with Claude Code effectively — writing better prompts, optimising workflows, and exploring how to structure code, packages, and architecture collaboratively with AI.
+I have built bit by bit, with each feature and improvement added with assistance from Claude Code. I'm using it as a hands-on way to learn how to work with Claude Code effectively — writing better prompts, optimising workflows, and exploring how to structure code, packages, and architecture collaboratively with AI.
 
 A data aggregation hub that processes PDF documents and external API data into a unified, clean REST API. Built with TypeScript, Express, Prisma, and the Anthropic SDK.
 
