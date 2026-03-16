@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(npm ls:*)",
+      "Bash(git config:*)",
+      "Bash(git rm:*)",
+      "Bash(git remote:*)",
+      "Bash(git push:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/subodhkalika/prac/Grishma-projects/Finflow/.claude/skills"
+    ]
+  }
+}
