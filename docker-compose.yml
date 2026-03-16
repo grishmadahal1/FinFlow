@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      - DATABASE_URL=postgresql://finflow:finflow@postgres:5432/finflow
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ALPHA_VANTAGE_API_KEY=${ALPHA_VANTAGE_API_KEY}
+      - API_KEY_SALT=${API_KEY_SALT:-default-dev-salt-change-me-32ch}
+      - WEBHOOK_SIGNING_SECRET=${WEBHOOK_SIGNING_SECRET:-default-dev-secret-change-32ch}
+      - PORT=3000
+      - LOG_LEVEL=info
+      - NODE_ENV=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: finflow
+      POSTGRES_PASSWORD: finflow
+      POSTGRES_DB: finflow
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U finflow']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  webhook-receiver:
+    build:
+      context: .
+      dockerfile: Dockerfile.webhook-receiver
+    ports:
+      - '4000:4000'
+    environment:
+      - PORT=4000
+
+volumes:
+  pgdata:

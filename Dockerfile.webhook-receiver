@@ -1,0 +1,35 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY <<'SCRIPT' server.js
+const http = require('http');
+
+const PORT = process.env.PORT || 4000;
+
+const server = http.createServer((req, res) => {
+  if (req.method === 'POST') {
+    let body = '';
+    req.on('data', (chunk) => { body += chunk; });
+    req.on('end', () => {
+      console.log(`[${new Date().toISOString()}] Webhook received:`);
+      console.log(`  Event: ${req.headers['x-finflow-event']}`);
+      console.log(`  Signature: ${req.headers['x-finflow-signature']}`);
+      console.log(`  Body: ${body.substring(0, 200)}`);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ received: true }));
+    });
+  } else {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'webhook receiver running' }));
+  }
+});
+
+server.listen(PORT, () => {
+  console.log(`Webhook receiver listening on port ${PORT}`);
+});
+SCRIPT
+
+EXPOSE 4000
+
+CMD ["node", "server.js"]
