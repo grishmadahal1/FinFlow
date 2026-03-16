@@ -1,0 +1,43 @@
+service: finflow
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'ap-southeast-2'}
+  memorySize: 512
+  timeout: 30
+  environment:
+    DATABASE_URL: ${env:DATABASE_URL}
+    ANTHROPIC_API_KEY: ${env:ANTHROPIC_API_KEY}
+    ALPHA_VANTAGE_API_KEY: ${env:ALPHA_VANTAGE_API_KEY}
+    API_KEY_SALT: ${env:API_KEY_SALT}
+    WEBHOOK_SIGNING_SECRET: ${env:WEBHOOK_SIGNING_SECRET}
+    NODE_ENV: production
+
+functions:
+  pdfExtraction:
+    handler: dist/infrastructure/aws/lambda-handlers.pdfExtractionHandler
+    events:
+      - http:
+          path: /lambda/extract-pdf
+          method: post
+          cors: true
+    timeout: 120
+    memorySize: 1024
+
+  apiSync:
+    handler: dist/infrastructure/aws/lambda-handlers.apiSyncHandler
+    events:
+      - http:
+          path: /lambda/sync/{dataSourceId}
+          method: post
+          cors: true
+    timeout: 60
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 3001
