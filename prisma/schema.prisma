@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ApiKey {
+  id        String   @id @default(uuid())
+  keyHash   String   @unique @map("key_hash")
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("api_keys")
+}
+
+model Document {
+  id           String    @id @default(uuid())
+  filename     String
+  status       String    @default("pending")
+  rawText      String?   @map("raw_text")
+  errorMessage String?   @map("error_message")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  processedAt  DateTime? @map("processed_at")
+
+  financialRecords FinancialRecord[]
+
+  @@map("documents")
+}
+
+model DataSource {
+  id           String    @id @default(uuid())
+  type         String
+  configJson   Json      @map("config_json")
+  lastSyncedAt DateTime? @map("last_synced_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  financialRecords FinancialRecord[]
+
+  @@map("data_sources")
+}
+
+model FinancialRecord {
+  id                  String   @id @default(uuid())
+  sourceType          String   @map("source_type")
+  sourceId            String?  @map("source_id")
+  accountNumberMasked String   @map("account_number_masked")
+  accountHolderName   String   @map("account_holder_name")
+  institution         String
+  periodStart         DateTime @map("period_start")
+  periodEnd           DateTime @map("period_end")
+  openingBalance      Decimal  @map("opening_balance") @db.Decimal(15, 2)
+  closingBalance      Decimal  @map("closing_balance") @db.Decimal(15, 2)
+  currency            String   @default("AUD")
+  rawJson             Json     @map("raw_json")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  document     Document?   @relation(fields: [documentId], references: [id])
+  documentId   String?     @map("document_id")
+  dataSource   DataSource? @relation(fields: [dataSourceId], references: [id])
+  dataSourceId String?     @map("data_source_id")
+
+  transactions Transaction[]
+
+  @@map("financial_records")
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  recordId    String   @map("record_id")
+  date        DateTime
+  description String
+  amount      Decimal  @db.Decimal(15, 2)
+  type        String
+  category    String?
+  hash        String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  record FinancialRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  @@unique([hash])
+  @@map("transactions")
+}
+
+model WebhookEndpoint {
+  id        String   @id @default(uuid())
+  url       String
+  secret    String
+  eventsJson Json    @map("events_json")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  deliveries WebhookDelivery[]
+
+  @@map("webhook_endpoints")
+}
+
+model WebhookDelivery {
+  id          String   @id @default(uuid())
+  endpointId  String   @map("endpoint_id")
+  eventType   String   @map("event_type")
+  payloadJson Json     @map("payload_json")
+  status      String   @default("pending")
+  attempts    Int      @default(0)
+  lastError   String?  @map("last_error")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  endpoint WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@map("webhook_deliveries")
+}
+
+model PipelineEvent {
+  id          String   @id @default(uuid())
+  eventType   String   @map("event_type")
+  payloadJson Json     @map("payload_json")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("pipeline_events")
+}
